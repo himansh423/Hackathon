@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import User from "@/library/Modal/User";
+import User from "@/library/modals/User";
 import { NextResponse } from "next/server";
-import cookie from "cookie";
+import * as cookie from "cookie";
 import connectToDatabase from "@/library/database/db";
 
 const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET;

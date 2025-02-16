@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import cookie from "cookie";
+import * as cookie from "cookie";
 
 const JWT_SECRET = process.env.NEXT_PUBLIC_JWT_SECRET;
 
@@ -25,6 +25,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ user: decoded });
   } catch (error) {
     // Handle invalid token errors
+    console.log(error)
     return NextResponse.json(
       { message: "Invalid or expired token" },
       { status: 401 }
