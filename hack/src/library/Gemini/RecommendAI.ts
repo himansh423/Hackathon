@@ -1,14 +1,37 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+interface UserData {
+  age: string;
+  income: string;
+  location: string;
+  occupation: string;
+  description: string;
+}
+
+interface Schemes {
+  SchemeTitle: string;
+  SchemeProviderState: string;
+  SchemeDescription: string;
+  benefits: string;
+  details: string;
+  eligibility: string;
+  schemeLink: string;
+  _id:string
+}
+
 const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(apiKey as string);
 
-export async function getSchemeRecommendation(userData: any, schemes: any[]) {
-  console.log("checking",schemes)
+export async function getSchemeRecommendation(
+  userData: UserData,
+  schemes: Schemes[]
+) {
+  console.log("checking", schemes);
   const schemesList = schemes
     .map(
-      (scheme) =>
-        `Name: ${scheme.SchemeTitle}, Scheme-provider-State: ${scheme.SchemeProviderState}, Scheme-Description: ${scheme.SchemeDescription}, Scheme-Details:${scheme.details}, Benefits:${scheme.benefits}, eligibility:${scheme}`
+      (scheme: Schemes) =>
+        `Name: ${scheme.SchemeTitle}, Scheme-provider-State: ${scheme.SchemeProviderState}, Scheme-Description: ${scheme.SchemeDescription}, Scheme-Details:${scheme.details}, Benefits:${scheme.benefits}, eligibility:${scheme.eligibility},
+      "Scheme-Id":${scheme._id}`
     )
     .join("\n\n");
 
@@ -19,7 +42,7 @@ export async function getSchemeRecommendation(userData: any, schemes: any[]) {
   - Occupation: ${userData.occupation}
   - Description: ${userData.description}
   
-  Based on these details(Description is Optional), recommend the best government schemes from the list below.  
+  Based on these details, recommend the best government schemes from the list below.  
 
   **Schemes List:**  
   ${schemesList}
@@ -35,6 +58,8 @@ export async function getSchemeRecommendation(userData: any, schemes: any[]) {
         "category": "Scheme Category",
         "eligibility": "Eligibility Criteria",
         "reason": "Why this scheme is suitable for the user."
+        "Trust-Score": "give Score based on Scheme in the scale of 1-5"
+        "_id": "send id of scheme" 
       }
     ]
   }
