@@ -1,4 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import connectToDatabase from "@/library/database/db";
+import Scheme from "@/library/modal/SchemeSchema";
+import { NextResponse } from "next/server";
 
 interface UserData {
   age: string;
@@ -16,7 +19,7 @@ interface Schemes {
   details: string;
   eligibility: string;
   schemeLink: string;
-  _id:string
+  _id: string;
 }
 
 const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -26,12 +29,12 @@ export async function getSchemeRecommendation(
   userData: UserData,
   schemes: Schemes[]
 ) {
-  console.log("checking", schemes);
+  console.log("Checking schemes:", schemes);
+
   const schemesList = schemes
     .map(
       (scheme: Schemes) =>
-        `Name: ${scheme.SchemeTitle}, Scheme-provider-State: ${scheme.SchemeProviderState}, Scheme-Description: ${scheme.SchemeDescription}, Scheme-Details:${scheme.details}, Benefits:${scheme.benefits}, eligibility:${scheme.eligibility},
-      "Scheme-Id":${scheme._id}`
+        `Name: ${scheme.SchemeTitle}, Scheme-provider-State: ${scheme.SchemeProviderState}, Scheme-Description: ${scheme.SchemeDescription}, Scheme-Details:${scheme.details}, Benefits:${scheme.benefits}, Eligibility:${scheme.eligibility}, Scheme-Id:${scheme._id}`
     )
     .join("\n\n");
 
@@ -42,8 +45,8 @@ export async function getSchemeRecommendation(
   - Occupation: ${userData.occupation}
   - Description: ${userData.description}
   
-  Based on these details, recommend the best government schemes from the list below.  
-
+  Based on these details, recommend the best government schemes from the list below and some Schemes By yourself in you knowledge.
+  
   **Schemes List:**  
   ${schemesList}
 
@@ -57,15 +60,15 @@ export async function getSchemeRecommendation(
         "name": "Scheme Name",
         "category": "Scheme Category",
         "eligibility": "Eligibility Criteria",
-        "reason": "Why this scheme is suitable for the user."
-        "Trust-Score": "give Score based on Scheme in the scale of 1-5"
-        "_id": "send id of scheme" 
+        "reason": "Why this scheme is suitable for the user.",
+        "Trust-Score": "Give Score based on Scheme in the scale of 1-5",
+        "_id": "Send ID of scheme"
       }
     ]
   }
   \`\`\`
 
-  Ensure that the response **always follows this JSON format** without additional text or explanation.`;
+  Ensure that the response **strictly follows this JSON format** without additional text or explanation.`;
 
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
@@ -73,7 +76,10 @@ export async function getSchemeRecommendation(
     const response = await result.response;
 
     const rawText = await response.text();
-    const cleanedText = rawText.replace(/```json|```/g, "").trim();
+    console.log("Raw Response from Gemini:", rawText);
+
+    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    const cleanedText = jsonMatch ? jsonMatch[0] : "{}";
 
     return JSON.parse(cleanedText || "{}");
   } catch (error) {
